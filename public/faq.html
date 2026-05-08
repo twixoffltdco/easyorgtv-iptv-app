@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ - Easyorgtv</title>
+  <meta name="description" content="Frequently asked questions about Easyorgtv IPTV aggregator">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .faq-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+    .faq-header {
+      margin-bottom: 48px;
+      text-align: center;
+    }
+    .faq-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .faq-description {
+      font-size: 18px;
+      color: var(--text-secondary);
+    }
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .faq-item {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .faq-question {
+      width: 100%;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-primary);
+      text-align: left;
+      cursor: pointer;
+      transition: background-color var(--transition);
+    }
+    .faq-question:hover {
+      background-color: var(--bg-tertiary);
+    }
+    .faq-question svg {
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+      transition: transform var(--transition);
+      flex-shrink: 0;
+    }
+    .faq-item.open .faq-question svg {
+      transform: rotate(180deg);
+    }
+    .faq-answer {
+      display: none;
+      padding: 0 24px 20px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+    .faq-item.open .faq-answer {
+      display: block;
+    }
+    .faq-answer p {
+      margin-bottom: 12px;
+    }
+    .faq-answer ul {
+      margin-left: 20px;
+      margin-bottom: 12px;
+    }
+    .faq-answer li {
+      margin-bottom: 6px;
+    }
+    .faq-answer code {
+      background-color: var(--bg-tertiary);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+    .faq-category {
+      margin-top: 48px;
+      margin-bottom: 24px;
+    }
+    .faq-category-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-container">
+      <a href="/" class="logo">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+        <span class="logo-text">Easyorgtv</span>
+      </a>
+      <nav class="nav">
+        <a href="/" class="nav-link">Channels</a>
+        <a href="/docs" class="nav-link">Docs</a>
+        <a href="/faq" class="nav-link active">FAQ</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="faq-container">
+    <div class="faq-header">
+      <h1 class="faq-title">Frequently Asked Questions</h1>
+      <p class="faq-description">Find answers to common questions about Easyorgtv</p>
+    </div>
+
+    <div class="faq-category">
+      <h2 class="faq-category-title">General Questions</h2>
+    </div>
+
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-question">
+          What is Easyorgtv?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>Easyorgtv is a free, open-source IPTV channel aggregator that searches the internet for publicly available live TV streams. It provides a unified interface to browse, search, and watch channels from around the world.</p>
+          <p>Unlike traditional IPTV services, Easyorgtv does not host any content - it simply indexes and organizes publicly available streams.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          Is Easyorgtv free to use?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>Yes, Easyorgtv is completely free and open-source. There are no subscriptions, no ads, and no hidden fees. You can self-host it on your own server or use the public instance.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          Where do the channels come from?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>Easyorgtv uses a crawler system that searches the internet for publicly available M3U/M3U8 playlists. These playlists contain links to live TV streams that broadcasters have made publicly accessible.</p>
+          <p>We do not source channels from any specific provider or database - our system independently discovers and indexes streams from across the web.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-category">
+      <h2 class="faq-category-title">Playback Issues</h2>
+    </div>
+
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-question">
+          Why is a channel not working?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>Streams can stop working for several reasons:</p>
+          <ul>
+            <li>The broadcaster changed the stream URL</li>
+            <li>The stream is geo-restricted in your region</li>
+            <li>The stream requires authentication</li>
+            <li>Server maintenance or technical issues</li>
+            <li>High traffic causing temporary unavailability</li>
+          </ul>
+          <p>Try refreshing the channel list or checking back later. Our crawler periodically updates the stream database.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          The video is buffering constantly. What can I do?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>Buffering issues are usually related to network conditions:</p>
+          <ul>
+            <li>Check your internet connection speed</li>
+            <li>Try a different stream quality if available</li>
+            <li>Close other bandwidth-heavy applications</li>
+            <li>Try using a VPN if the stream is slow from your location</li>
+            <li>Wait a few moments and try again</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          Can I watch on my smart TV or set-top box?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>Yes! You can export the channel list as an M3U playlist and use it with any IPTV player:</p>
+          <ul>
+            <li><strong>Smart TVs:</strong> Use built-in IPTV apps or install apps like IPTV Smarters</li>
+            <li><strong>Android TV / Fire TV:</strong> Use TiviMate, IPTV Smarters, or similar apps</li>
+            <li><strong>Apple TV:</strong> Use apps like GSE Smart IPTV</li>
+            <li><strong>Kodi:</strong> Use the PVR IPTV Simple Client addon</li>
+            <li><strong>Desktop:</strong> Use VLC Media Player</li>
+          </ul>
+          <p>Download the playlist from <code>/api/playlist</code> and import it into your preferred app.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-category">
+      <h2 class="faq-category-title">Technical Questions</h2>
+    </div>
+
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-question">
+          How do I self-host Easyorgtv?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>Self-hosting is simple:</p>
+          <ol>
+            <li>Clone the repository: <code>git clone https://github.com/easyorgtv/easyorgtv.git</code></li>
+            <li>Install dependencies: <code>npm install</code></li>
+            <li>Start the server: <code>npm start</code></li>
+          </ol>
+          <p>The server runs on port 3000 by default. Set the <code>PORT</code> environment variable to change it.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          How do I add my own playlist sources?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>You can add custom playlist sources by modifying the <code>server/crawler.js</code> file. Add URLs to the <code>CRAWL_SOURCES</code> array:</p>
+          <p><code>CRAWL_SOURCES.push('https://example.com/playlist.m3u');</code></p>
+          <p>The crawler will automatically fetch and parse channels from your custom sources on the next scan.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          What browsers are supported?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>Easyorgtv works on all modern browsers:</p>
+          <ul>
+            <li>Google Chrome (recommended)</li>
+            <li>Mozilla Firefox</li>
+            <li>Microsoft Edge</li>
+            <li>Safari (with native HLS support)</li>
+            <li>Opera</li>
+          </ul>
+          <p>For the best experience, use the latest version of Chrome or Firefox.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          How often is the channel database updated?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>The crawler runs automatically every 6 hours to discover new channels and validate existing streams. You can also trigger a manual scan via the API at <code>POST /api/scan</code>.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-category">
+      <h2 class="faq-category-title">Legal Questions</h2>
+    </div>
+
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-question">
+          Is using Easyorgtv legal?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>Easyorgtv indexes publicly available streams from the internet. We do not host any content ourselves. The legality of watching specific streams depends on your local laws and the licensing of the content.</p>
+          <p>We recommend only watching content that is legally available in your region. Please refer to our Terms of Service for more information.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          How do I report a copyright issue?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>If you are a copyright holder and believe your content is being indexed without authorization, please contact us with the following information:</p>
+          <ul>
+            <li>Your contact information</li>
+            <li>Description of the copyrighted work</li>
+            <li>The specific channel or stream URL</li>
+            <li>A statement of good faith belief that use is not authorized</li>
+          </ul>
+          <p>We will promptly remove any infringing content from our index.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-grid">
+        <div class="footer-section">
+          <h4 class="footer-title">Easyorgtv</h4>
+          <p class="footer-description">Free IPTV channel aggregator with internet-wide search.</p>
+        </div>
+        <div class="footer-section">
+          <h4 class="footer-title">Links</h4>
+          <ul class="footer-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="/docs">Documentation</a></li>
+            <li><a href="/faq">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4 class="footer-title">Legal</h4>
+          <ul class="footer-links">
+            <li><a href="/privacy">Privacy Policy</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4 class="footer-title">API</h4>
+          <ul class="footer-links">
+            <li><a href="/api/channels">Channels API</a></li>
+            <li><a href="/api/playlist">M3U Playlist</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Easyorgtv. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.querySelectorAll('.faq-item').forEach(item => {
+      const question = item.querySelector('.faq-question');
+      question.addEventListener('click', () => {
+        item.classList.toggle('open');
+      });
+    });
+  </script>
+</body>
+</html>

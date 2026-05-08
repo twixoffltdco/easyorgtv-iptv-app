@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation - Easyorgtv</title>
+  <meta name="description" content="Technical documentation for Easyorgtv IPTV aggregator">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .docs-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+    .docs-header {
+      margin-bottom: 48px;
+    }
+    .docs-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .docs-description {
+      font-size: 18px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .docs-section {
+      margin-bottom: 48px;
+    }
+    .docs-section h2 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .docs-section h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 24px 0 12px;
+      color: var(--text-primary);
+    }
+    .docs-section p {
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    .docs-section ul, .docs-section ol {
+      color: var(--text-secondary);
+      margin-left: 24px;
+      margin-bottom: 16px;
+    }
+    .docs-section li {
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+    .code-block {
+      background-color: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+    }
+    .code-inline {
+      background-color: var(--bg-tertiary);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+    .api-endpoint {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .api-method {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+    .api-method.get { background-color: #238636; color: white; }
+    .api-method.post { background-color: #1f6feb; color: white; }
+    .api-path {
+      font-family: var(--font-mono);
+      font-size: 14px;
+    }
+    .api-description {
+      margin-top: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    .table-container {
+      overflow-x: auto;
+      margin-bottom: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background-color: var(--bg-tertiary);
+      font-weight: 600;
+      font-size: 13px;
+    }
+    td {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-container">
+      <a href="/" class="logo">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+        <span class="logo-text">Easyorgtv</span>
+      </a>
+      <nav class="nav">
+        <a href="/" class="nav-link">Channels</a>
+        <a href="/docs" class="nav-link active">Docs</a>
+        <a href="/faq" class="nav-link">FAQ</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="docs-container">
+    <div class="docs-header">
+      <h1 class="docs-title">Documentation</h1>
+      <p class="docs-description">
+        Complete technical documentation for Easyorgtv - an IPTV channel aggregator with internet-wide search capabilities.
+      </p>
+    </div>
+
+    <section class="docs-section">
+      <h2>Getting Started</h2>
+      <p>Easyorgtv is a self-hosted IPTV channel aggregator that searches the internet for publicly available streams and provides a unified interface for viewing them.</p>
+      
+      <h3>Installation</h3>
+      <p>Clone the repository and install dependencies:</p>
+      <div class="code-block">
+git clone https://github.com/easyorgtv/easyorgtv.git
+cd easyorgtv
+npm install
+      </div>
+
+      <h3>Running the Server</h3>
+      <p>Start the development server:</p>
+      <div class="code-block">
+npm start
+      </div>
+      <p>The server will start on <span class="code-inline">http://localhost:3000</span> by default.</p>
+    </section>
+
+    <section class="docs-section">
+      <h2>Architecture</h2>
+      <p>Easyorgtv consists of three main components:</p>
+      <ul>
+        <li><strong>Crawler</strong> - Searches the internet for M3U/M3U8 playlists and validates streams</li>
+        <li><strong>Parser</strong> - Extracts channel metadata from playlist files (name, logo, category, etc.)</li>
+        <li><strong>API Server</strong> - Express.js server providing REST endpoints and serving the frontend</li>
+      </ul>
+
+      <h3>Data Flow</h3>
+      <ol>
+        <li>Crawler fetches playlists from configured sources</li>
+        <li>Parser extracts channel information and validates URLs</li>
+        <li>Channels are stored in an in-memory database</li>
+        <li>Frontend queries the API and displays channels</li>
+        <li>User clicks play, HLS.js loads the stream</li>
+      </ol>
+    </section>
+
+    <section class="docs-section">
+      <h2>API Reference</h2>
+      <p>All API endpoints return JSON data.</p>
+
+      <div class="api-endpoint">
+        <span class="api-method get">GET</span>
+        <span class="api-path">/api/channels</span>
+        <p class="api-description">Get paginated list of all channels. Supports filtering by category, country, and language.</p>
+      </div>
+
+      <div class="api-endpoint">
+        <span class="api-method get">GET</span>
+        <span class="api-path">/api/channels/search?q={query}</span>
+        <p class="api-description">Search channels by name, category, or country.</p>
+      </div>
+
+      <div class="api-endpoint">
+        <span class="api-method get">GET</span>
+        <span class="api-path">/api/channels/:id</span>
+        <p class="api-description">Get a single channel by ID.</p>
+      </div>
+
+      <div class="api-endpoint">
+        <span class="api-method get">GET</span>
+        <span class="api-path">/api/categories</span>
+        <p class="api-description">Get list of all categories with channel counts.</p>
+      </div>
+
+      <div class="api-endpoint">
+        <span class="api-method get">GET</span>
+        <span class="api-path">/api/countries</span>
+        <p class="api-description">Get list of all countries with channel counts.</p>
+      </div>
+
+      <div class="api-endpoint">
+        <span class="api-method get">GET</span>
+        <span class="api-path">/api/playlist</span>
+        <p class="api-description">Export all channels as an M3U playlist file.</p>
+      </div>
+
+      <div class="api-endpoint">
+        <span class="api-method get">GET</span>
+        <span class="api-path">/api/stats</span>
+        <p class="api-description">Get system statistics (total channels, categories, countries, last scan time).</p>
+      </div>
+
+      <div class="api-endpoint">
+        <span class="api-method post">POST</span>
+        <span class="api-path">/api/scan</span>
+        <p class="api-description">Trigger a manual scan for new channels.</p>
+      </div>
+
+      <h3>Query Parameters</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="code-inline">page</span></td>
+              <td>integer</td>
+              <td>Page number (default: 1)</td>
+            </tr>
+            <tr>
+              <td><span class="code-inline">limit</span></td>
+              <td>integer</td>
+              <td>Items per page (default: 50)</td>
+            </tr>
+            <tr>
+              <td><span class="code-inline">category</span></td>
+              <td>string</td>
+              <td>Filter by category name</td>
+            </tr>
+            <tr>
+              <td><span class="code-inline">country</span></td>
+              <td>string</td>
+              <td>Filter by country code</td>
+            </tr>
+            <tr>
+              <td><span class="code-inline">language</span></td>
+              <td>string</td>
+              <td>Filter by language</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="docs-section">
+      <h2>Channel Object</h2>
+      <p>Each channel object contains the following fields:</p>
+      <div class="code-block">
+{
+  "id": "nasa-tv-public-abc123",
+  "name": "NASA TV Public",
+  "url": "https://example.com/stream.m3u8",
+  "logo": "https://example.com/logo.png",
+  "category": "Science",
+  "country": "US",
+  "language": "English",
+  "tvgId": "nasa.tv",
+  "tvgName": "NASA TV",
+  "source": "https://example.com/playlist.m3u"
+}
+      </div>
+    </section>
+
+    <section class="docs-section">
+      <h2>M3U Playlist Format</h2>
+      <p>Easyorgtv supports standard M3U and extended M3U (M3U8) formats with the following tags:</p>
+      <ul>
+        <li><span class="code-inline">#EXTM3U</span> - Header tag</li>
+        <li><span class="code-inline">#EXTINF</span> - Channel information with duration and attributes</li>
+        <li><span class="code-inline">tvg-logo</span> - Channel logo URL</li>
+        <li><span class="code-inline">tvg-id</span> - Channel identifier for EPG</li>
+        <li><span class="code-inline">tvg-name</span> - Channel display name</li>
+        <li><span class="code-inline">tvg-country</span> - Country code</li>
+        <li><span class="code-inline">tvg-language</span> - Language</li>
+        <li><span class="code-inline">group-title</span> - Category/group name</li>
+      </ul>
+
+      <h3>Example Playlist</h3>
+      <div class="code-block">
+#EXTM3U
+#EXTINF:-1 tvg-id="nasa.tv" tvg-name="NASA TV" tvg-logo="https://example.com/nasa.png" group-title="Science",NASA TV
+https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8
+#EXTINF:-1 tvg-name="France 24" group-title="News",France 24
+https://static.france24.com/live/F24_EN_LO_HLS/live_web.m3u8
+      </div>
+    </section>
+
+    <section class="docs-section">
+      <h2>Integration with Players</h2>
+      <p>Export your playlist and use it with any IPTV player:</p>
+      
+      <h3>VLC Media Player</h3>
+      <ol>
+        <li>Download the M3U playlist from <span class="code-inline">/api/playlist</span></li>
+        <li>Open VLC and go to Media &rarr; Open Network Stream</li>
+        <li>Paste the playlist URL or open the downloaded file</li>
+      </ol>
+
+      <h3>Kodi</h3>
+      <ol>
+        <li>Install the PVR IPTV Simple Client addon</li>
+        <li>Configure the addon with the playlist URL</li>
+        <li>Restart Kodi to load channels</li>
+      </ol>
+
+      <h3>Programmatic Access</h3>
+      <div class="code-block">
+// Fetch channels via API
+const response = await fetch('http://localhost:3000/api/channels');
+const { data, pagination } = await response.json();
+
+// Get M3U playlist
+const playlist = await fetch('http://localhost:3000/api/playlist');
+const m3u = await playlist.text();
+      </div>
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-grid">
+        <div class="footer-section">
+          <h4 class="footer-title">Easyorgtv</h4>
+          <p class="footer-description">Free IPTV channel aggregator with internet-wide search.</p>
+        </div>
+        <div class="footer-section">
+          <h4 class="footer-title">Links</h4>
+          <ul class="footer-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="/docs">Documentation</a></li>
+            <li><a href="/faq">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4 class="footer-title">Legal</h4>
+          <ul class="footer-links">
+            <li><a href="/privacy">Privacy Policy</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4 class="footer-title">API</h4>
+          <ul class="footer-links">
+            <li><a href="/api/channels">Channels API</a></li>
+            <li><a href="/api/playlist">M3U Playlist</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Easyorgtv. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
