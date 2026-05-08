@@ -1,6 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const http = require('http');
+const https = require('https');
+const { URL } = require('url');
 const { getChannels, searchChannels, getStats, getCategories, getCountries, addChannels } = require('./database');
 const { startCrawler, crawlChannels, addSource, removeSource, getSources, getCrawlerStatus, forceScan, fetchPlaylist } = require('./crawler');
 
@@ -8,9 +11,208 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Range', 'Accept', 'Origin', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'Content-Length', 'Accept-Ranges']
+}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
+
+// ============================================
+// Stream Proxy - CORS bypass for video streams
+// ============================================
+
+// Proxy for M3U8 playlists (rewrites URLs to use proxy)
+app.get('/api/proxy/m3u8', async (req, res) => {
+  const streamUrl = req.query.url;
+  
+  if (!streamUrl) {
+    return res.status(400).json({ error: 'URL parameter is required' });
+  }
+
+  try {
+    const parsedUrl = new URL(streamUrl);
+    const protocol = parsedUrl.protocol === 'https:' ? https : http;
+    
+    const proxyReq = protocol.get(streamUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': '*/*',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Referer': parsedUrl.origin,
+        'Origin': parsedUrl.origin
+      },
+      timeout: 15000
+    }, (proxyRes) => {
+      if (proxyRes.statusCode !== 200) {
+        return res.status(proxyRes.statusCode).json({ error: 'Failed to fetch stream' });
+      }
+
+      let data = '';
+      proxyRes.on('data', chunk => data += chunk);
+      proxyRes.on('end', () => {
+        // Rewrite relative URLs in m3u8 to absolute proxied URLs
+        const baseUrl = streamUrl.substring(0, streamUrl.lastIndexOf('/') + 1);
+        
+        const rewritten = data.split('\n').map(line => {
+          line = line.trim();
+          if (line.startsWith('#') || line === '') {
+            // Handle URI= in EXT-X-KEY
+            if (line.includes('URI="')) {
+              return line.replace(/URI="([^"]+)"/g, (match, uri) => {
+                const absoluteUri = uri.startsWith('http') ? uri : baseUrl + uri;
+                return `URI="/api/proxy/stream?url=${encodeURIComponent(absoluteUri)}"`;
+              });
+            }
+            return line;
+          }
+          // Convert relative URLs to absolute proxied URLs
+          const absoluteUrl = line.startsWith('http') ? line : baseUrl + line;
+          if (line.endsWith('.m3u8') || line.includes('.m3u8?')) {
+            return `/api/proxy/m3u8?url=${encodeURIComponent(absoluteUrl)}`;
+          }
+          return `/api/proxy/stream?url=${encodeURIComponent(absoluteUrl)}`;
+        }).join('\n');
+
+        res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.send(rewritten);
+      });
+    });
+
+    proxyReq.on('error', (err) => {
+      console.error('M3U8 proxy error:', err.message);
+      res.status(500).json({ error: 'Stream proxy error', message: err.message });
+    });
+
+    proxyReq.on('timeout', () => {
+      proxyReq.destroy();
+      res.status(504).json({ error: 'Stream timeout' });
+    });
+
+  } catch (error) {
+    console.error('M3U8 proxy error:', error.message);
+    res.status(500).json({ error: 'Invalid URL or proxy error' });
+  }
+});
+
+// Proxy for TS segments and other media files
+app.get('/api/proxy/stream', async (req, res) => {
+  const streamUrl = req.query.url;
+  
+  if (!streamUrl) {
+    return res.status(400).json({ error: 'URL parameter is required' });
+  }
+
+  try {
+    const parsedUrl = new URL(streamUrl);
+    const protocol = parsedUrl.protocol === 'https:' ? https : http;
+    
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': '*/*',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Referer': parsedUrl.origin,
+      'Origin': parsedUrl.origin
+    };
+
+    // Forward range header for seeking support
+    if (req.headers.range) {
+      headers['Range'] = req.headers.range;
+    }
+
+    const proxyReq = protocol.get(streamUrl, { headers, timeout: 30000 }, (proxyRes) => {
+      // Forward response headers
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Expose-Headers', 'Content-Range, Content-Length, Accept-Ranges');
+      
+      if (proxyRes.headers['content-type']) {
+        res.setHeader('Content-Type', proxyRes.headers['content-type']);
+      }
+      if (proxyRes.headers['content-length']) {
+        res.setHeader('Content-Length', proxyRes.headers['content-length']);
+      }
+      if (proxyRes.headers['content-range']) {
+        res.setHeader('Content-Range', proxyRes.headers['content-range']);
+      }
+      if (proxyRes.headers['accept-ranges']) {
+        res.setHeader('Accept-Ranges', proxyRes.headers['accept-ranges']);
+      }
+
+      res.status(proxyRes.statusCode);
+      proxyRes.pipe(res);
+    });
+
+    proxyReq.on('error', (err) => {
+      console.error('Stream proxy error:', err.message);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Stream proxy error' });
+      }
+    });
+
+    proxyReq.on('timeout', () => {
+      proxyReq.destroy();
+      if (!res.headersSent) {
+        res.status(504).json({ error: 'Stream timeout' });
+      }
+    });
+
+    // Handle client disconnect
+    req.on('close', () => {
+      proxyReq.destroy();
+    });
+
+  } catch (error) {
+    console.error('Stream proxy error:', error.message);
+    res.status(500).json({ error: 'Invalid URL or proxy error' });
+  }
+});
+
+// Check if stream is available
+app.get('/api/check-stream', async (req, res) => {
+  const streamUrl = req.query.url;
+  
+  if (!streamUrl) {
+    return res.status(400).json({ error: 'URL parameter is required' });
+  }
+
+  try {
+    const parsedUrl = new URL(streamUrl);
+    const protocol = parsedUrl.protocol === 'https:' ? https : http;
+    
+    const checkReq = protocol.get(streamUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': '*/*',
+        'Range': 'bytes=0-1024'
+      },
+      timeout: 10000
+    }, (checkRes) => {
+      const isOk = checkRes.statusCode >= 200 && checkRes.statusCode < 400;
+      checkRes.destroy();
+      res.json({ 
+        available: isOk, 
+        statusCode: checkRes.statusCode,
+        contentType: checkRes.headers['content-type']
+      });
+    });
+
+    checkReq.on('error', () => {
+      res.json({ available: false, error: 'Connection failed' });
+    });
+
+    checkReq.on('timeout', () => {
+      checkReq.destroy();
+      res.json({ available: false, error: 'Timeout' });
+    });
+
+  } catch (error) {
+    res.json({ available: false, error: error.message });
+  }
+});
 
 // ============================================
 // API Routes - Channels
