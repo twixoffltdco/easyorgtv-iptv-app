@@ -419,9 +419,17 @@ function renderPagination(paginationData) {
 
 // Player Functions
 let currentChannel = null;
+let playAttempt = 0;
+let isUsingProxy = false;
+let retryCount = 0;
+const MAX_RETRIES = 3;
 
 function openPlayer(channel) {
   currentChannel = channel;
+  playAttempt = 0;
+  isUsingProxy = false;
+  retryCount = 0;
+  
   playerTitle.textContent = channel.name;
   playerCategory.textContent = channel.category || 'Uncategorized';
   
@@ -436,6 +444,10 @@ function openPlayer(channel) {
   playerModal.classList.add('open');
   document.body.style.overflow = 'hidden';
 
+  // Show loading state
+  showLoadingState('Connecting to stream...');
+  
+  // Try to play stream
   playStream(channel.url);
 }
 
@@ -449,89 +461,217 @@ function closePlayer() {
   }
   
   videoPlayer.pause();
-  videoPlayer.src = '';
+  videoPlayer.removeAttribute('src');
+  videoPlayer.load();
   currentChannel = null;
+  playAttempt = 0;
+  retryCount = 0;
+  hideLoadingState();
 }
 
-function playStream(url) {
+function showLoadingState(message) {
+  const loadingEl = document.getElementById('playerLoading');
+  if (loadingEl) {
+    loadingEl.querySelector('p').textContent = message || 'Loading...';
+    loadingEl.classList.add('visible');
+  }
+}
+
+function hideLoadingState() {
+  const loadingEl = document.getElementById('playerLoading');
+  if (loadingEl) {
+    loadingEl.classList.remove('visible');
+  }
+}
+
+function getProxyUrl(url) {
+  if (url.includes('.m3u8') || url.includes('m3u8')) {
+    return `/api/proxy/m3u8?url=${encodeURIComponent(url)}`;
+  }
+  return `/api/proxy/stream?url=${encodeURIComponent(url)}`;
+}
+
+async function playStream(url, useProxy = false) {
   playerError.classList.remove('visible');
+  
+  const streamUrl = useProxy ? getProxyUrl(url) : url;
+  isUsingProxy = useProxy;
+  
+  console.log(`[v0] Playing stream: ${useProxy ? 'via proxy' : 'direct'} - ${url}`);
+
+  // Destroy existing HLS instance
+  if (hls) {
+    hls.destroy();
+    hls = null;
+  }
+  
+  videoPlayer.removeAttribute('src');
+  videoPlayer.load();
 
   // Check if it's an HLS stream
-  if (url.includes('.m3u8') || url.includes('m3u8')) {
+  const isHLS = url.includes('.m3u8') || url.includes('m3u8');
+  
+  if (isHLS) {
     if (Hls.isSupported()) {
-      if (hls) {
-        hls.destroy();
-      }
-      
       hls = new Hls({
         debug: false,
         enableWorker: true,
-        lowLatencyMode: true,
+        lowLatencyMode: false,
         backBufferLength: 90,
         maxBufferLength: 30,
         maxMaxBufferLength: 600,
         maxBufferSize: 60 * 1000 * 1000,
         maxBufferHole: 0.5,
+        highBufferWatchdogPeriod: 2,
+        nudgeOffset: 0.1,
+        nudgeMaxRetry: 5,
         startLevel: -1,
         autoStartLoad: true,
-        xhrSetup: function(xhr, url) {
+        fragLoadingTimeOut: 20000,
+        fragLoadingMaxRetry: 6,
+        fragLoadingRetryDelay: 500,
+        manifestLoadingTimeOut: 15000,
+        manifestLoadingMaxRetry: 4,
+        manifestLoadingRetryDelay: 500,
+        levelLoadingTimeOut: 15000,
+        levelLoadingMaxRetry: 4,
+        xhrSetup: function(xhr, xhrUrl) {
           xhr.withCredentials = false;
+          // Add headers to help with CORS
+          xhr.timeout = 20000;
         }
       });
 
-      hls.loadSource(url);
+      hls.loadSource(streamUrl);
       hls.attachMedia(videoPlayer);
 
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        videoPlayer.play().catch(() => {});
+      hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+        console.log('[v0] Manifest parsed, levels:', data.levels.length);
+        hideLoadingState();
+        videoPlayer.play().catch(err => {
+          console.log('[v0] Autoplay blocked:', err.message);
+        });
+      });
+
+      hls.on(Hls.Events.FRAG_LOADED, () => {
+        hideLoadingState();
       });
 
       hls.on(Hls.Events.ERROR, (event, data) => {
+        console.log('[v0] HLS error:', data.type, data.details, data.fatal);
+        
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              console.error('Network error, attempting recovery...');
-              hls.startLoad();
+              if (data.details === Hls.ErrorDetails.MANIFEST_LOAD_ERROR ||
+                  data.details === Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT ||
+                  data.details === Hls.ErrorDetails.MANIFEST_PARSING_ERROR) {
+                // Try proxy if direct failed
+                if (!useProxy && retryCount < MAX_RETRIES) {
+                  console.log('[v0] Direct connection failed, trying proxy...');
+                  retryCount++;
+                  showLoadingState('Switching to proxy...');
+                  setTimeout(() => playStream(url, true), 500);
+                } else if (useProxy && retryCount < MAX_RETRIES) {
+                  retryCount++;
+                  console.log('[v0] Retrying via proxy...');
+                  showLoadingState(`Retrying (${retryCount}/${MAX_RETRIES})...`);
+                  hls.startLoad();
+                } else {
+                  showPlayerError('Stream unavailable. The channel may be offline or geo-restricted.');
+                }
+              } else {
+                // Try to recover from other network errors
+                console.log('[v0] Network error, attempting recovery...');
+                hls.startLoad();
+              }
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
-              console.error('Media error, attempting recovery...');
+              console.log('[v0] Media error, attempting recovery...');
               hls.recoverMediaError();
               break;
             default:
-              showPlayerError();
+              if (!useProxy) {
+                console.log('[v0] Fatal error, trying proxy...');
+                showLoadingState('Switching to proxy...');
+                setTimeout(() => playStream(url, true), 500);
+              } else {
+                showPlayerError('Unable to play this stream. Try another channel.');
+              }
               break;
           }
         }
       });
+      
+      // Timeout for initial load
+      setTimeout(() => {
+        if (!hls || hls.media?.readyState === 0) {
+          if (!useProxy && retryCount < MAX_RETRIES) {
+            console.log('[v0] Load timeout, trying proxy...');
+            retryCount++;
+            playStream(url, true);
+          }
+        }
+      }, 10000);
+      
     } else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
       // Native HLS support (Safari)
-      videoPlayer.src = url;
+      videoPlayer.src = streamUrl;
       videoPlayer.addEventListener('loadedmetadata', () => {
+        hideLoadingState();
         videoPlayer.play().catch(() => {});
-      });
+      }, { once: true });
+      
+      videoPlayer.addEventListener('error', () => {
+        if (!useProxy) {
+          playStream(url, true);
+        } else {
+          showPlayerError('Unable to load stream');
+        }
+      }, { once: true });
     } else {
-      showPlayerError();
+      showPlayerError('Your browser does not support HLS playback');
     }
   } else {
-    // Direct video URL
-    videoPlayer.src = url;
-    videoPlayer.play().catch(() => {
-      showPlayerError();
-    });
+    // Direct video URL (MP4, etc.)
+    videoPlayer.src = useProxy ? getProxyUrl(url) : url;
+    
+    videoPlayer.addEventListener('loadeddata', () => {
+      hideLoadingState();
+      videoPlayer.play().catch(() => {});
+    }, { once: true });
+    
+    videoPlayer.addEventListener('canplay', () => {
+      hideLoadingState();
+      videoPlayer.play().catch(() => {});
+    }, { once: true });
+    
+    videoPlayer.addEventListener('error', () => {
+      if (!useProxy) {
+        console.log('[v0] Direct MP4 failed, trying proxy...');
+        playStream(url, true);
+      } else {
+        showPlayerError('Unable to load video');
+      }
+    }, { once: true });
   }
-
-  videoPlayer.onerror = () => {
-    showPlayerError();
-  };
 }
 
-function showPlayerError() {
+function showPlayerError(message) {
+  hideLoadingState();
+  const errorMessage = playerError.querySelector('p') || playerError.querySelector('.error-message');
+  if (errorMessage) {
+    errorMessage.textContent = message || 'Unable to load stream. Please try another channel.';
+  }
   playerError.classList.add('visible');
 }
 
 function retryStream() {
   if (currentChannel) {
-    playStream(currentChannel.url);
+    retryCount = 0;
+    showLoadingState('Retrying...');
+    // If we were using proxy, try direct first
+    playStream(currentChannel.url, !isUsingProxy);
   }
 }
 
